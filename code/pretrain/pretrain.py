@@ -163,7 +163,7 @@ def main():
     
     parser.add_argument("--model_path",default="",type=str) 
     parser.add_argument("--vocab_file",default="/home/lawson/pretrain/bert-base-uncased/vocab.txt",type=str) 
-    parser.add_argument("--train_file_path",default="/home/lawson/program/pretrain_bert/data/raw_data/all_data.txt",type=str)
+    parser.add_argument("--train_file_path",default="/home/lawson/program/pretrain_bert/raw_data/all_data.txt",type=str)
     parser.add_argument("--config_path",default="config.json",type=str) 
     config = parser.parse_args()
 
