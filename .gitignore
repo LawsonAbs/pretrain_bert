@@ -1,4 +1,1 @@
-code/data/*
-code/model/*
-./raw_data/*
-./user_data/*
+code/__pycache__/*
