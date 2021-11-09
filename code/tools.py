@@ -2,8 +2,8 @@ import os
 '''
 Author: LawsonAbs
 Date: 2021-11-08 20:48:00
-LastEditTime: 2021-11-08 21:16:12
-FilePath: /pretrain_bert/data/code/tools.py
+LastEditTime: 2021-11-09 14:51:31
+FilePath: /pretrain_bert/code/tools.py
 '''
 # 读取train+test+dev的数据，然后生成一个总得文件 raw_data.txt
 def read_all_text(paths):    

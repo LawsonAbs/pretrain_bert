@@ -25,7 +25,7 @@ from transformers import (
 from transformers.utils import logging
 
 import sys
-sys.path.append(r"/home/lawson/program/pretrain_bert/data/code")  # 引入当前的这个code下的环境
+sys.path.append(r"/home/lawson/program/pretrain_bert/code")  # 引入当前的这个code下的环境
 print(sys.path)
 from modeling.modeling_nezha.modeling import NeZhaForMaskedLM,NeZhaConfig
 from simple_trainer import Trainer
