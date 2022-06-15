@@ -35,7 +35,7 @@ from pretrain_args import ParallelMode, TrainingArguments
 import time
 warnings.filterwarnings('ignore')
 from argparse import ArgumentParser
-logger = logging.get_logger(__name__)
+logger = logging.get_logger("Pretrain_chinese-roberta-wwm-ext-large_ccks_2022")
 
 
 def seed_everything(seed):
@@ -69,8 +69,8 @@ def read_data(config, train_file_path, test_file_path, tokenizer: BertTokenizer)
         pickle.dump(inputs, f)
 
     return inputs
-
-# TODO 需要研究一下这个类的实现
+# 这个类所做的工作就是把
+# 需要研究一下这个类的实现
 class LineByLineTextDataset(Dataset):
     def __init__(self, tokenizer: PreTrainedTokenizer,
      train_file_path: str, 
@@ -94,11 +94,11 @@ class LineByLineTextDataset(Dataset):
         # 字典中数到id的映射关系是一一对应        
         with open(train_file_path, encoding="utf-8",errors ='ignore') as f:
             # isspace 用于判断一个字符串中的字符是否全是whitespace                    
-            flag  = 0
-            # 可以看到这里是对每行作为一条文本进行预训练（将得到的temp_input_ids 放到 input_ids 中），这样才是ok的。
+            char_num_not_in_vocab  = 0
+            # 可以看到这里是对每行作为一条文本进行预训练（将得到的 temp_input_ids 放到 input_ids 中），这样才是ok的。
             for line in tqdm(f): # tqdm中可以加total参数表示总行数 
                 temp_input_ids = [0] * block_size
-                temp_input_ids[0] = 2
+                temp_input_ids[0] = 2 # TODO: 为什么这里默认设置成 2？ => 设置成其它的值应该也是可以的
                 if len(line )>0 and not line.isspace():
                     line = line.strip("\n")                    
                     max_length = block_size # 最大长度
@@ -106,8 +106,8 @@ class LineByLineTextDataset(Dataset):
                     for i in line:
                         if i ==' ' or i =='':
                             continue
-                        if i not in vocab_map.keys():
-                            flag +=1
+                        if i not in vocab_map.keys(): # 如果不在字典中
+                            char_num_not_in_vocab +=1
                             temp_input_ids[cnt] = 1 # unknown
                         else:
                             temp_input_ids[cnt] = vocab_map[i]
@@ -127,7 +127,7 @@ class LineByLineTextDataset(Dataset):
         self.examples = input_ids
         #self.examples = batch_encoding['input_ids']
         self.examples = [{"input_ids": torch.tensor(e, dtype=torch.long)} for e in self.examples]
-        print(flag)
+        print(f"有{char_num_not_in_vocab}个char 未在vocab中找到")
     def __len__(self):
         return len(self.examples)
 
@@ -151,11 +151,11 @@ def main():
     parser.add_argument("--manual_seed", default=123456, type=int,help='seed num')
     parser.add_argument("--train_fgm", default=False,type=boolean_string)
     parser.add_argument("--fgm_epsilon", default=1.0)
-    parser.add_argument("--batch_size", default=8,type=int)
+    parser.add_argument("--batch_size", default=64,type=int)
     parser.add_argument("--num_epochs",default=100,type=int)
     parser.add_argument("--gradient_accumulation_steps", default=2,type=int)        
     parser.add_argument("--data_cache_path,",default='', type=str)
-    parser.add_argument("--seq_length", default=50, type=int)
+    parser.add_argument("--seq_length", default=128, type=int)
     parser.add_argument("--model_name", default="bert-base-uncased", type=str) # 使用nezha 预训练还是使用 large预训练，这个参数必须指定
     parser.add_argument("--model_type",default="bert", type=str)
     parser.add_argument("--model_save_path",default="", type=str)
@@ -163,13 +163,13 @@ def main():
     
     parser.add_argument("--model_path",default="",type=str) 
     parser.add_argument("--vocab_file",default="/home/lawson/pretrain/bert-base-uncased/vocab.txt",type=str) 
-    parser.add_argument("--train_file_path",default="/home/lawson/program/pretrain_bert/raw_data/all_data.txt",type=str)
+    parser.add_argument("--train_file_path",default="/home/lawson/program/pretrain_bert/raw_data/all_data_zh.txt",type=str)
     parser.add_argument("--config_path",default="config.json",type=str) 
     config = parser.parse_args()
 
     mlm_probability = 0.15
     num_train_epochs = config.num_epochs
-    seq_length = 50
+    seq_length = config.seq_length
     batch_size = config.batch_size
     fgm_epsilon = 1.0
     learning_rate = 2e-5
@@ -230,7 +230,7 @@ def main():
         print(item)
     start_time = time.time()
     training_args = TrainingArguments(
-            output_dir='../../user_data/pretrain_model/'+config.model_path,
+            output_dir='../../pretrain_model/'+config.model_path,
             num_train_epochs=num_train_epochs,
             learning_rate=learning_rate,
             per_device_train_batch_size=batch_size, # 注意这里是每个设备上的batch_size，而不是总共的batch_size 
